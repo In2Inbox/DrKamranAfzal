@@ -1,0 +1,11 @@
+fields
+
+
+[action tags]
+PATIENT_CREATE
+
+[status tags]
+not confirmed
+
+[setting tags]
+disable sms messaging

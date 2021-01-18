@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="2d127996-ac73-4314-bf61-9251a15cd95d" name="DrKamranAfzal" url="https://apiroi.net">
+        <fileTransfer accessType="SFTP" host="a2ls12.a2hosting.com" port="7822" sshConfigId="94290688-b53a-4b95-b28d-bbf42fb26a8b" sshConfig="apiroine@a2ls12.a2hosting.com:7822 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
