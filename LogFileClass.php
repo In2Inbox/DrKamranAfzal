@@ -15,7 +15,7 @@ class LogFileClass
 		return date('m/d/Y h:i:s a', time());
 	}
 	
-	function __construct($lfName='logfile.log', $mode='w+', $buffered=true)
+	function __construct($lfName='logfile.log', $mode='a+', $buffered=true)
 	{
 		if ($lfName==='') $this->logFileName='logfile.log';
 		if ($mode==='') $this->mode='w+';

@@ -10,10 +10,10 @@ class dc2keapObj {
 	
 	// Debug/logging/testing details
 	private $token='';
-	private $log=NULL;
-	private $testing=TRUE;
-	private $debug=TRUE;
-	private $logging=TRUE;
+	public $log=NULL;
+	public $testing=FALSE;
+	private $debug=FALSE;
+	public $logging=TRUE;
 	
 	// Infusionsoft/Keap details
 	//      Testing credentials
@@ -45,9 +45,22 @@ class dc2keapObj {
 	);
 	
 	function __construct($json='') { // if $json included then it will be used for testing instead
-		global $tokens, $keapTestAPIKey, $keapTestAppName, $patientTestDataFile, $DCSignature, $debugFile;
-		$this->appName=$keapTestAppName;
-		$this->appKey=$keapTestAPIKey;
+		global $tokens, $keapTestAPIKey, $keapTestAppName, $patientTestDataFile, $DCSignature, $debugFile, $keapLiveAPIKey, $keapLiveAppName;
+		if ($this->logging) {
+			$this->log=new LogFileClass($debugFile);
+			if ($this->testing) {
+				$this->log->lfWriteLn('***************** BEGIN TEST LOGGING *****************');
+			} else {
+				$this->log->lfWriteLn('***************** BEGIN LIVE LOGGING *****************');
+			}
+		}
+		if ($this->testing) {
+			$this->appName = $keapTestAppName;
+			$this->appKey = $keapTestAPIKey;
+		} else {
+			$this->appName = $keapLiveAppName;
+			$this->appKey = $keapLiveAPIKey;
+		}
 		$this->token=$tokens->getAccessToken();
 		$this->signature=$_SERVER['HTTP_X_DRCHRONO_SIGNATURE'];
 		if ($this->signature!==$DCSignature) {
@@ -68,18 +81,11 @@ class dc2keapObj {
 		if (!$json=='') $this->json=$json; else $this->json=file_get_contents('PHP://input');
 		if ($this->json=='') {
 			$this->setError(446);
-			return false; // false if no json body
+			return FALSE; // false if no json body
 		}
 		$this->obj=json_decode($this->json);
-		if ($this->logging) {
-			$this->log=new LogFileClass($debugFile);
-			if ($this->testing) {
-				$this->log->lfWriteLn('***************** BEGIN TEST LOGGING *****************');
-			} else {
-				$this->log->lfWriteLn('***************** BEGIN LIVE LOGGING *****************');
-			}
-			$this->log->lfWriteLn('raw json received = '.$this->json);
-		}
+		if ($this->logging) $this->log->lfWriteLn('raw json received = '.$this->json);
+		
 		$this->token=$tokens->getAccessToken();
 		try {
 			$this->keap = new iSDK();
@@ -94,6 +100,7 @@ class dc2keapObj {
 			if ($this->logging) $this->log->lfWriteLn('Error 449 while creating Keap object');
 			return false;
 		}
+		if ($this->logging) $this->log->lfWriteLn('Data/Error checks ... Passed!');
 		return TRUE;
 	}
 	
@@ -253,7 +260,8 @@ class dc2keapObj {
 	
 	/* Contact related functions */
 	function keapContactAdd($id) {
-		$cid=$this->getContactByDCId($id);
+		$con=$this->getContactByDCId($id);
+		if (count($con)>0) $cid=$con[0]['Id']; else $cid=false;
 		if ($cid) { // contact exists so update
 			$this->keap->dsUpdate('Contact', $cid, array(
 				'FirstName' => $this->obj->object->first_name,
@@ -369,17 +377,19 @@ class dc2keapObj {
 			CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
 			CURLOPT_CUSTOMREQUEST => 'GET',
 			CURLOPT_HTTPHEADER => array(
-				"Authorization: Bearer $this->token",
+				"Authorization: Bearer $this->token"
 			),
 		));
 		
 		$response = curl_exec($curl);
 		curl_close($curl);
+		$this->log->lfWriteLn('office json = '.$response);
 		return json_decode($response);
 	}
 	
 }
 
-//$dc2k=new dc2keapObj();
-/*$con=$dc2k->getDCPatientById('90999991');
-var_export($con);*/
+$dc2k=new dc2keapObj();
+/*$con=$dc2k->getDCPatientById('90999991');*/
+//$con=$dc2k->getOfficeById('300585');
+//var_export($con);

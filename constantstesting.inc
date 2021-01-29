@@ -13,6 +13,6 @@ $appointmentTimeFieldName='_AppointmentTime';
 $appointmentLocationFieldName='_AppointmentOfficeLocation';
 $drchronoPatientIdFieldName='_PatientChartId';
 $timezone='America/Phoenix';
-$absPath='/DrChrono/oauth.json';
+$absPath='C:\Users\JohnBorelli\PhpstormProjects\DrKamranAfzal\oauth.json';
 $clientId='fzhAEZhTPOjoO3MpBONt0bPjvveQUwBb86UNW3bc';
 $clientSecret='c3lxfc0I76S3Jzz1CEtFpoHgfIU3hWOGsXc24u0yXimR9ZLQruE7xCAYIOLY7FQKkrgl2tybG90IexyvC3UI2xlB4bpdOr2fboGLXCsHNrXAjoG1qD1WtinjSrN2xjg4';

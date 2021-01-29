@@ -3,6 +3,7 @@
   <component name="SshConfigs">
     <configs>
       <sshConfig authType="PASSWORD" host="a2ls12.a2hosting.com" id="94290688-b53a-4b95-b28d-bbf42fb26a8b" port="7822" nameFormat="DESCRIPTIVE" username="apiroine" />
+      <sshConfig authType="PASSWORD" host="afzalclinics.com" id="e14e5e29-138d-45ad-958b-239e5f3ece92" port="2222" nameFormat="DESCRIPTIVE" username="afzalclinics-afzalclinic-johnb" />
     </configs>
   </component>
 </project>

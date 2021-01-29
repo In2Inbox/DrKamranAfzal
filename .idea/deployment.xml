@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" autoUpload="Always" serverName="DrKamranAfzal" remoteFilesAllowedToDisappearOnAutoupload="false">
+  <component name="PublishConfigData" autoUpload="Always" serverName="DrKamranAfzalProduction" remoteFilesAllowedToDisappearOnAutoupload="false" showAutoUploadSettingsWarning="false">
     <serverData>
       <paths name="APIROI ISPlugin">
         <serverdata>
@@ -47,7 +47,14 @@
       <paths name="DrKamranAfzal">
         <serverdata>
           <mappings>
-            <mapping deploy="/home/apiroine/public_html/DrKamranAfzal" local="$PROJECT_DIR$" web="https://apiroi.net/DrKamranAfzal" />
+            <mapping deploy="/DrChrono" local="$PROJECT_DIR$" web="https://afzalclinics/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="DrKamranAfzalProduction">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/DrChrono/" local="$PROJECT_DIR$" web="https://afzalclinics.com" />
           </mappings>
         </serverdata>
       </paths>

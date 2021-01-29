@@ -3,7 +3,14 @@
   <component name="WebServers">
     <option name="servers">
       <webServer id="2d127996-ac73-4314-bf61-9251a15cd95d" name="DrKamranAfzal" url="https://apiroi.net">
-        <fileTransfer accessType="SFTP" host="a2ls12.a2hosting.com" port="7822" sshConfigId="94290688-b53a-4b95-b28d-bbf42fb26a8b" sshConfig="apiroine@a2ls12.a2hosting.com:7822 password">
+        <fileTransfer accessType="SFTP" host="afzalclinics.com" port="2222" sshConfigId="e14e5e29-138d-45ad-958b-239e5f3ece92" sshConfig="afzalclinics-afzalclinic-johnb@afzalclinics.com:2222 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+      <webServer id="d7471423-da72-493d-aa87-1e09727edf35" name="DrKamranAfzalProduction" url="https://afzalclinics.com">
+        <fileTransfer accessType="SFTP" host="afzalclinics.com" port="2222" sshConfigId="e14e5e29-138d-45ad-958b-239e5f3ece92" sshConfig="afzalclinics-afzalclinic-johnb@afzalclinics.com:2222 password">
           <advancedOptions>
             <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
           </advancedOptions>
