@@ -1,1 +1,0 @@
-user:read user:write calendar:read calendar:write patients:read patients:write patients:summary:read patients:summary:write billing:read billing:write clinical:read clinical:write labs:read labs:write messages:read messages:write settings:read settings:write tasks:read tasks:write
