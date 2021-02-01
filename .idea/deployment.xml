@@ -56,6 +56,11 @@
           <mappings>
             <mapping deploy="/DrChrono/" local="$PROJECT_DIR$" web="https://afzalclinics.com" />
           </mappings>
+          <excludedPaths>
+            <excludedPath local="true" path="$PROJECT_DIR$/constants.inc" />
+            <excludedPath local="true" path="$PROJECT_DIR$/oauth.json" />
+            <excludedPath local="true" path="$PROJECT_DIR$/OAuth/tokens.php" />
+          </excludedPaths>
         </serverdata>
       </paths>
       <paths name="JBA Campaign Tools">

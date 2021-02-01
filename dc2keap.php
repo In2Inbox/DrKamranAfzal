@@ -1,6 +1,6 @@
 <?php
 
-// require_once 'dctesting.php'; // ONLY unremark this for testing
+require_once 'dctesting.inc'; // ONLY unremark this for testing
 require_once 'src/isdk.php';
 require_once 'LogFileClass.php';
 require_once 'OAuth/tokens.php';
@@ -11,7 +11,7 @@ class dc2keapObj {
 	// Debug/logging/testing details
 	private $token='';
 	public $log=NULL;
-	public $testing=FALSE;
+	public $testing=TRUE;
 	private $debug=FALSE;
 	public $logging=TRUE;
 	

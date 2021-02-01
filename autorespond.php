@@ -14,7 +14,7 @@ file_put_contents('get.json', $json);
 /* end webhook verify code */
 
 // Instantiate objects from classes
-// require_once 'dctesting.inc'; // ONLY unremark when testing
+require_once 'dctesting.inc'; // ONLY unremark when testing
 require_once 'dc2keap.php';
 require_once 'src/isdk.php';
 require_once 'constants.inc';
@@ -24,14 +24,14 @@ $event=$_SERVER['HTTP_X_DRCHRONO_EVENT'];
 $method=$_SERVER['REQUEST_METHOD'];
 $json='';
 if ($json==='') $json=file_get_contents('php://input');
-if ($dc->logging) file_put_contents('phpinput.json', $json);
-
-/* check that method is a post action otherwise halt */
-if ($method!=='POST') die();
 
 /* Initialize drchrono object */
 $dcId=0;
 $dc=new dc2keapObj($json);
+if ($dc->logging) file_put_contents('phpinput.json', $json);
+
+/* check that method is a post action otherwise halt */
+if ($method!=='POST') die();
 
 /**
  * Take all inputs and, based on event type, take appropriate action
