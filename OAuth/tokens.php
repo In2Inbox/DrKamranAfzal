@@ -15,7 +15,7 @@ class oauthClass {
 		
 		$this->abspath=$absPath;
 		
-		$json=file_get_contents("$this->abspath");
+		$json=file_get_contents($this->abspath);
 		$this->tokens=json_decode($json);
 		$this->clientId=$clientId;
 		$this->clientSecret=$clientSecret;

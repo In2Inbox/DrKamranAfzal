@@ -14,7 +14,7 @@ file_put_contents('get.json', $json);
 /* end webhook verify code */
 
 // Instantiate objects from classes
-require_once 'dctesting.inc'; // ONLY unremark when testing
+//require_once 'dctesting.inc'; // ONLY unremark when testing
 require_once 'dc2keap.php';
 require_once 'src/isdk.php';
 require_once 'constants.inc';

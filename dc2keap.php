@@ -1,6 +1,6 @@
 <?php
 
-require_once 'dctesting.inc'; // ONLY unremark this for testing
+//require_once 'dctesting.inc'; // ONLY unremark this for testing
 require_once 'src/isdk.php';
 require_once 'LogFileClass.php';
 require_once 'OAuth/tokens.php';
@@ -11,7 +11,7 @@ class dc2keapObj {
 	// Debug/logging/testing details
 	private $token='';
 	public $log=NULL;
-	public $testing=TRUE;
+	public $testing=FALSE;
 	private $debug=FALSE;
 	public $logging=TRUE;
 	
@@ -377,7 +377,7 @@ class dc2keapObj {
 			CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
 			CURLOPT_CUSTOMREQUEST => 'GET',
 			CURLOPT_HTTPHEADER => array(
-				"Authorization: Bearer $this->token"
+				"Authorization: Bearer $this->getAccessToken()"
 			),
 		));
 		
