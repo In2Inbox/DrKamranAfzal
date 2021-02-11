@@ -2,7 +2,7 @@
 
 $get=$_GET;
 $json=json_encode($get);
-//file_put_contents('json.json', $json);
+//file_put_contents('get.json', $json);
 
 /* Beginning of code required to verify webhook */
  if (isset($_GET['msg'])) {
@@ -14,22 +14,16 @@ $json=json_encode($get);
 /* end webhook verify code */
 
 // Instantiate objects from classes
-$json='';
 //require_once 'dctesting.inc'; // ONLY unremark when testing
 require_once 'dc2keap.php';
 require_once 'src/isdk.php';
 require_once 'constants.inc';
-require_once 'LogFileClass.php';
 
 // retrieve inputs from drchrono webhook
 $event=$_SERVER['HTTP_X_DRCHRONO_EVENT'];
 $method=$_SERVER['REQUEST_METHOD'];
+$json='';
 if ($json==='') $json=file_get_contents('php://input');
-
-/* active log of json inputs */
-$jsonLog=new LogFileClass('json.log');
-$jsonLog->lfWriteLn($json);
-//file_put_contents('json.json', $json);
 
 /* Initialize drchrono object */
 $dcId=0;
@@ -38,43 +32,6 @@ $dc=new dc2keapObj($json);
 
 /* check that method is a post action otherwise halt */
 if ($method!=='POST') die();
-
-/* Check that no other excluding factors exist */
-$obj=$dc->getObj();
-if (isset($obj->appt_is_break)) {
-	if ($obj->appt_is_break) {
-		$dc->log->lfWriteLn('Appointment object is a BREAK.  End processing.');
-		die();
-	}
-}
-
-if (isset($obj->patient)) {
-	if (is_nan($obj->patient)) {
-		$dc->log->lfWriteLn('Patient ID not present.  Cannot continue.');
-		die();
-	}
-}
-
-if (isset($obj->office)) {
-	if (is_nan($obj->patient)) {
-		$dc->log->lfWriteLn('Office ID not present.  Cannot continue.');
-		die();
-	}
-}
-
-if (isset($obj->doctor)) {
-	if (is_nan($obj->doctor)) {
-		$dc->log->lfWriteLn('Doctor ID not present.  Cannot continue.');
-		die();
-	}
-}
-
-if (isset($obj->profile)) {
-	if (is_nan($obj->profile)) {
-		$dc->log->lfWriteLn('Profile ID not present.  Cannot continue.');
-		die();
-	}
-}
 
 /**
  * Take all inputs and, based on event type, take appropriate action
@@ -91,7 +48,7 @@ function addCon($first, $middle, $last, $nickname, $email, $phone1type, $phone1,
 				$conObj) {
 	global $dc;
 	$check=$dc->getContactByDCId($conObj->id);
-	if (!$check) {
+	if (empty($check)) {
 		$cid=$dc->keap->dsAdd('Contact',
 			array(
 				'FirstName' => $first,
@@ -137,10 +94,15 @@ $obj=$dc->getObj()->object;
 if ($dc->logging) $dc->log->lfWriteLn('Event reported = '.$event);
 if ($event==='PATIENT_CREATE') {
 	$cid=$dc->keapContactAdd($obj->id);
+	// patient demographic fields method
+	$dc->keap->grpAssign($cid, $tid);
 } elseif ($event==='PATIENT_MODIFY') {
 	$con=$dc->getDCPatientById($obj->id);
 	$cid=$dc->keapContactAdd($obj->id);
-} elseif (!$obj->appt_is_break) {
+	// patient demographic fields method
+	$tid=$dc->tagByNameExists('PATIENT_MODIFY');
+	$dc->keap->grpAssign($cid, $tid);
+} else {
 	$con=$dc->getDCPatientById($obj->patient);
 	$cid=addCon($con->first_name, $con->middle_name, $con->last_name, $con->nick_name,
 	$con->email, 'Home', $con->home_phone, 'Mobile', $con->cell_phone,
@@ -158,7 +120,7 @@ $dc->keap->grpAssign($cid, $tid);
 if (($event==='APPOINTMENT_CREATE') ||
 	($event==='APPOINTMENT_MODIFY') ||
 	($event==='APPOINTMENT_DELETE')) {
-	if (($event!=='APPOINTMENT_DELETE') && (!$obj->appt_is_break)) {
+	if ($event!=='APPOINTMENT_DELETE') {
 		$ofc = $dc->getOfficeById( $obj->office );
 		$office = json_decode( $ofc );
 		// set appointment fields
@@ -178,11 +140,6 @@ if (($event==='APPOINTMENT_CREATE') ||
 	$tid = $dc->tagByNameExists($obj->status);
 	if (!$tid) $tid=$dc->createTag($obj->status);
 	if ($tid) $dc->keap->grpAssign($cid, $tid);
-}
-
-// if appointment is a break (not an appointment) no need to go further
-if (isset($obj->appt_is_break)) {
-	if (!$obj->appt_is_break) die();
 }
 
 // apply ancillary tags here

@@ -60,6 +60,8 @@
             <excludedPath local="true" path="$PROJECT_DIR$/constants.inc" />
             <excludedPath local="true" path="$PROJECT_DIR$/oauth.json" />
             <excludedPath local="true" path="$PROJECT_DIR$/OAuth/tokens.php" />
+            <excludedPath local="true" path="$PROJECT_DIR$/autorespond.php" />
+            <excludedPath local="true" path="$PROJECT_DIR$/dc2keap.php" />
           </excludedPaths>
         </serverdata>
       </paths>

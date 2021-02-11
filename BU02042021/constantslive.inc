@@ -12,7 +12,6 @@ $DRChronoId='_DrChronoId';
 $appointmentDateFieldName='_AppointmentDate';
 $appointmentTimeFieldName='_AppointmentTime';
 $appointmentLocationFieldName='_AppointmentOfficeLocation';
-$appointmentIdFieldName='_AppointmentId1';
 $drchronoPatientIdFieldName='_PatientChartId';
 $timezone='America/Chicago';
 $absPath='C:\Users\JohnBorelli\PhpstormProjects\DrKamranAfzal\oauth.json';

@@ -1,6 +1,6 @@
 <?php
 
-require_once 'dctesting.inc'; // ONLY unremark this for testing
+//require_once 'dctesting.inc'; // ONLY unremark this for testing
 require_once 'src/isdk.php';
 require_once 'LogFileClass.php';
 require_once 'OAuth/tokens.php';
@@ -11,7 +11,7 @@ class dc2keapObj {
 	// Debug/logging/testing details
 	private $token='';
 	public $log=NULL;
-	public $testing=TRUE;
+	public $testing=FALSE;
 	private $debug=FALSE;
 	public $logging=TRUE;
 	
@@ -61,7 +61,7 @@ class dc2keapObj {
 			$this->appName = $keapLiveAppName;
 			$this->appKey = $keapLiveAPIKey;
 		}
-		//$this->token=$tokens->getAccessToken();
+		$this->token=$tokens->getAccessToken();
 		$this->signature=$_SERVER['HTTP_X_DRCHRONO_SIGNATURE'];
 		if ($this->signature!==$DCSignature) {
 			$this->setError(444);
@@ -76,7 +76,7 @@ class dc2keapObj {
 			$this->setError(445);
 			return FALSE; // false if none of the triggers are correct
 		}
-		//$json='';
+		$json='';
 		if ($this->testing) $json=file_get_contents($patientTestDataFile);
 		if (!$json=='') $this->json=$json; else $this->json=file_get_contents('PHP://input');
 		if ($this->json=='') {
@@ -262,7 +262,7 @@ class dc2keapObj {
 	function keapContactAdd($id) {
 		$con=$this->getContactByDCId($id);
 		if ($con) $cid=$con[0]['Id']; else $cid=$con;
-		if ($cid) { // contact exists so update
+		if (is_array($cid)) { // contact exists so update
 			$this->keap->dsUpdate('Contact', $cid, array(
 				'FirstName' => $this->obj->object->first_name,
 				'LastName' => $this->obj->object->last_name,
@@ -281,7 +281,7 @@ class dc2keapObj {
 				'MiddleName' => $this->obj->object->middle_name,
 				'Nickname' => $this->obj->object->nick_name
 			));
-		} else { // contact does NOT exist so create new
+		} elseif (!$cid) { // contact does NOT exist so create new
 			$cid=$this->keap->dsAdd('Contact', array(
 				'FirstName' => $this->obj->object->first_name,
 				'LastName' => $this->obj->object->last_name,
@@ -300,6 +300,8 @@ class dc2keapObj {
 				'MiddleName' => $this->obj->object->middle_name,
 				'Nickname' => $this->obj->object->nick_name
 			));
+		} else {
+			$this->log->lfWriteLn('Error condition in KeapContactAdd() = '.$cid);
 		}
 		$this->keap->optIn($this->obj->object->email);
 		if ($this->logging) $this->log->lfWriteLn('Create/Update contact result = '.$cid);
@@ -328,7 +330,7 @@ class dc2keapObj {
 										'Nickname', 'Phone1Type', 'Phone1', 'Phone2Type', 'Phone2',
 										'Phone3Type', 'Phone3', 'StreetAddress1', 'City', 'State',
 										'PostalCode', 'Birthday', '_DrChronoId1'));
-		if ((is_array($result)) && (empty($result))) return false; else return $result;
+		if ((is_array($result)) && (!empty($result))) return $result; else return $false;
 	}
 	
 	/* tag related functions */
@@ -393,3 +395,8 @@ class dc2keapObj {
 	}
 	
 }
+
+$dc2k=new dc2keapObj();
+/*$con=$dc2k->getDCPatientById('90999991');*/
+//$con=$dc2k->getOfficeById('300585');
+//var_export($con);

@@ -13,65 +13,62 @@ $json=json_encode($get);
 }
 /* end webhook verify code */
 
-// Instantiate objects from classes
-$json='';
-//require_once 'dctesting.inc'; // ONLY unremark when testing
+require_once 'dctesting.inc'; // ONLY unremark when testing
 require_once 'dc2keap.php';
 require_once 'src/isdk.php';
 require_once 'constants.inc';
 require_once 'LogFileClass.php';
 
+// Instantiate objects from classes
+$dcId=0;
+$dc=new dc2keapObj();
+$jsonLog=new LogFileClass('json.log');
+
 // retrieve inputs from drchrono webhook
 $event=$_SERVER['HTTP_X_DRCHRONO_EVENT'];
 $method=$_SERVER['REQUEST_METHOD'];
-if ($json==='') $json=file_get_contents('php://input');
+if ($json==='') $json=$dc->getJSON();
 
 /* active log of json inputs */
-$jsonLog=new LogFileClass('json.log');
 $jsonLog->lfWriteLn($json);
-//file_put_contents('json.json', $json);
-
-/* Initialize drchrono object */
-$dcId=0;
-$dc=new dc2keapObj($json);
-//if ($dc->logging) file_put_contents('phpinput.json', $json);
+if ($dc->logging) file_put_contents('json.json', $json);
 
 /* check that method is a post action otherwise halt */
 if ($method!=='POST') die();
 
 /* Check that no other excluding factors exist */
-$obj=$dc->getObj();
+// $obj=$dc->getObj();
 if (isset($obj->appt_is_break)) {
 	if ($obj->appt_is_break) {
-		$dc->log->lfWriteLn('Appointment object is a BREAK.  End processing.');
+		if ($dc->logging) $dc->log->lfWriteLn('Appointment object is a BREAK.  End processing.');
 		die();
 	}
 }
 
 if (isset($obj->patient)) {
 	if (is_nan($obj->patient)) {
-		$dc->log->lfWriteLn('Patient ID not present.  Cannot continue.');
+		if ($dc->logging) $dc->log->lfWriteLn('Patient ID not present.  Cannot continue.');
 		die();
 	}
 }
 
 if (isset($obj->office)) {
 	if (is_nan($obj->patient)) {
-		$dc->log->lfWriteLn('Office ID not present.  Cannot continue.');
+		if ($dc->logging) $dc->log->lfWriteLn('Office ID not present.  Cannot continue.');
 		die();
 	}
 }
 
 if (isset($obj->doctor)) {
 	if (is_nan($obj->doctor)) {
-		$dc->log->lfWriteLn('Doctor ID not present.  Cannot continue.');
+		if ($dc->logging) $dc->log->lfWriteLn('Doctor ID not present.  Cannot continue.');
 		die();
 	}
 }
 
 if (isset($obj->profile)) {
 	if (is_nan($obj->profile)) {
-		$dc->log->lfWriteLn('Profile ID not present.  Cannot continue.');
+		if ($dc->logging) $dc->log->lfWriteLn('Profile ID not present.  Cannot continue.');
 		die();
 	}
 }
