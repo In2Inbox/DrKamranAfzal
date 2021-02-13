@@ -30,6 +30,8 @@ class dc2keapObj {
 	private $event; // what type of event (patient create, appointment modify etc
 	private $json; // the json body sent as a result
 	public $obj; // the object converted json body
+	public $appointmentObj; // determined appointment structure
+	public $patientObj; // determined patient structure
 	private static $error; // the last error number
 	private static $errMsg; // the last error message
 	private static $messages=array // enumerate the error messages into an array
@@ -101,6 +103,10 @@ class dc2keapObj {
 			return false;
 		}
 		if ($this->logging) $this->log->lfWriteLn('Data/Error checks ... Passed!');
+		if (isset($this->obj->object->patient)) {
+			$this->setAppointment($this->json);
+			$this->patientObj=$this->getDCPatientById($this->obj->object->patient);
+		} else $this->setPatient($this->json);
 		return TRUE;
 	}
 	
@@ -206,6 +212,22 @@ class dc2keapObj {
 		return $this->obj;
 	}
 	
+	function setPatient($json) {
+		$this->patientObj=json_decode($json);
+	}
+	
+	function setAppointment($json) {
+		$this->appointmentObj=json_decode($json);
+	}
+	
+	function getPatient() {
+		return $this->patientObj;
+	}
+	
+	function getAppointment() {
+		return $this->appointmentObj;
+	}
+	
 	private function chrcpy($val, $mul) {  // $val can be either an ascii int or a string character
 		// copy a single character ($val by chr or int), $mul times/long
 		$chr=NULL;
@@ -264,51 +286,51 @@ class dc2keapObj {
 		if ($con) $cid=$con[0]['Id']; else $cid=$con;
 		if ($cid) { // contact exists so update
 			$this->keap->dsUpdate('Contact', $cid, array(
-				'FirstName' => $this->obj->object->first_name,
-				'LastName' => $this->obj->object->last_name,
-				'Email' => $this->obj->object->email,
+				'FirstName' => $this->patientObj->object->first_name,
+				'LastName' => $this->patientObj->object->last_name,
+				'Email' => $this->patientObj->object->email,
 				'Phone1Type' => 'Home',
 				'Phone2Type' => 'Mobile',
 				'Phone3Type' => 'Work',
-				'Phone1' => $this->obj->object->home_phone,
-				'Phone2' => $this->obj->object->cell_phone,
-				'Phone3' => $this->obj->object->office_phone,
-				'StreetAddress1' => $this->obj->object->address,
-				'City' => $this->obj->object->city,
-				'State' => $this->obj->object->state,
-				'PostalCode' => $this->obj->object->zip_code,
-				'Birthday' => $this->obj->object->date_of_birth,
-				'MiddleName' => $this->obj->object->middle_name,
-				'Nickname' => $this->obj->object->nick_name
+				'Phone1' => $this->patientObj->object->home_phone,
+				'Phone2' => $this->patientObj->object->cell_phone,
+				'Phone3' => $this->patientObj->object->office_phone,
+				'StreetAddress1' => $this->patientObj->object->address,
+				'City' => $this->patientObj->object->city,
+				'State' => $this->patientObj->object->state,
+				'PostalCode' => $this->patientObj->object->zip_code,
+				'Birthday' => $this->patientObj->object->date_of_birth,
+				'MiddleName' => $this->patientObj->object->middle_name,
+				'Nickname' => $this->patientObj->object->nick_name
 			));
 		} else { // contact does NOT exist so create new
 			$cid=$this->keap->dsAdd('Contact', array(
-				'FirstName' => $this->obj->object->first_name,
-				'LastName' => $this->obj->object->last_name,
-				'Email' => $this->obj->object->email,
+				'FirstName' => $this->patientObj->object->first_name,
+				'LastName' => $this->patientObj->object->last_name,
+				'Email' => $this->patientObj->object->email,
 				'Phone1Type' => 'Home',
 				'Phone2Type' => 'Mobile',
 				'Phone3Type' => 'Work',
-				'Phone1' => $this->obj->object->home_phone,
-				'Phone2' => $this->obj->object->cell_phone,
-				'Phone3' => $this->obj->object->office_phone,
-				'StreetAddress1' => $this->obj->object->address,
-				'City' => $this->obj->object->city,
-				'State' => $this->obj->object->state,
-				'PostalCode' => $this->obj->object->zip_code,
-				'Birthday' => $this->obj->object->date_of_birth,
-				'MiddleName' => $this->obj->object->middle_name,
-				'Nickname' => $this->obj->object->nick_name
+				'Phone1' => $this->patientObj->object->home_phone,
+				'Phone2' => $this->patientObj->object->cell_phone,
+				'Phone3' => $this->patientObj->object->office_phone,
+				'StreetAddress1' => $this->patientObj->object->address,
+				'City' => $this->patientObj->object->city,
+				'State' => $this->patientObj->object->state,
+				'PostalCode' => $this->patientObj->object->zip_code,
+				'Birthday' => $this->patientObj->object->date_of_birth,
+				'MiddleName' => $this->patientObj->object->middle_name,
+				'Nickname' => $this->patientObj->object->nick_name
 			));
 		}
-		$this->keap->optIn($this->obj->object->email);
+		$this->keap->optIn($this->patientObj->object->email);
 		if ($this->logging) $this->log->lfWriteLn('Create/Update contact result = '.$cid);
 		if (!is_integer($cid)) {
 			$this->setError(447);
 			if ($this->logging) $this->log->lfWriteLn('Error 447 creating/updating contact');
 			return false;
 		}
-		$cf=$this->keap->dsUpdate('Contact', $cid, array('_DrChronoId1'=>$id));
+		$cf=$this->keap->dsUpdate('Contact', $cid, array($DrChronoId=>$id));
 		if (!is_integer($cf)) {
 			$this->setError(448);
 			if ($this->logging) $this->log->lfWriteLn('Error 448 updating dr chrono id');
@@ -389,7 +411,7 @@ class dc2keapObj {
 		curl_close($curl);
 		$this->log->lfWriteLn('office id by var = '.$officeId);
 		$this->log->lfWriteLn('office json = '.$response);
-		return json_decode($response);
+		return $response;
 	}
 	
 }

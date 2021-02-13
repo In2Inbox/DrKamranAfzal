@@ -139,10 +139,14 @@ if ($event==='PATIENT_CREATE') {
 	$cid=$dc->keapContactAdd($obj->id);
 } elseif (!$obj->appt_is_break) {
 	$con=$dc->getDCPatientById($obj->patient);
+	$dccid=$dc->getContactByDCId($obj->patient);
 	$cid=addCon($con->first_name, $con->middle_name, $con->last_name, $con->nick_name,
 	$con->email, 'Home', $con->home_phone, 'Mobile', $con->cell_phone,
 	'Work', $con->office_phone, $con->address, $con->city, $con->state,
 		$con->zip_code, $con->date_of_birth, $con);
+} else {
+	$dc->log->lfWriteLn('NOT a qualifying appointment (break).  Ignoring.');
+	die();
 }
 
 // Apply event tag
@@ -162,24 +166,21 @@ if (($event==='APPOINTMENT_CREATE') ||
 		$da = explode( 'T', $obj->scheduled_time );
 		$date = $da[0];
 		$time = $da[1];
-		appointmentFields( $obj->patient, $date, $time, $ofc->name );
+		appointmentFields( $obj->patient, $date, $time, $office->name );
 		if ($dc->logging) {
 			$dc->log->lfWriteLn( 'office json = ' . $ofc );
 			$dc->log->lfWriteLn( 'Appointment Fields :' );
 			$dc->log->lfWriteLn( '     Patient = ' . $obj->patient );
 			$dc->log->lfWriteLn( '     Date = ' . $date );
 			$dc->log->lfWriteLn( '     Time = ' . $time );
-			$dc->log->lfWriteLn( '     Office/Location = ' . $ofc->name );
+			$dc->log->lfWriteLn( '     Office/Location = ' . $office->name );
 		}
 	}
-	$tid = $dc->tagByNameExists($obj->status);
-	if (!$tid) $tid=$dc->createTag($obj->status);
-	if ($tid) $dc->keap->grpAssign($cid, $tid);
-}
-
-// if appointment is a break (not an appointment) no need to go further
-if (isset($obj->appt_is_break)) {
-	if (!$obj->appt_is_break) die();
+	if ($obj->status!=='') {
+		$tid = $dc->tagByNameExists( $obj->status );
+		if (!$tid) $tid = $dc->createTag( $obj->status );
+		if ($tid) $dc->keap->grpAssign( $cid, $tid );
+	}
 }
 
 // apply ancillary tags here
