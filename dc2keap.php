@@ -11,7 +11,7 @@ class dc2keapObj {
 	// Debug/logging/testing details
 	private $token='';
 	public $log=NULL;
-	public $testing=TRUE;
+	public $testing=FALSE;
 	private $debug=FALSE;
 	public $logging=TRUE;
 	
@@ -304,24 +304,29 @@ class dc2keapObj {
 				'Nickname' => $this->patientObj->object->nick_name
 			));
 		} else { // contact does NOT exist so create new
-			$cid=$this->keap->dsAdd('Contact', array(
-				'FirstName' => $this->patientObj->object->first_name,
-				'LastName' => $this->patientObj->object->last_name,
-				'Email' => $this->patientObj->object->email,
-				'Phone1Type' => 'Home',
-				'Phone2Type' => 'Mobile',
-				'Phone3Type' => 'Work',
-				'Phone1' => $this->patientObj->object->home_phone,
-				'Phone2' => $this->patientObj->object->cell_phone,
-				'Phone3' => $this->patientObj->object->office_phone,
-				'StreetAddress1' => $this->patientObj->object->address,
-				'City' => $this->patientObj->object->city,
-				'State' => $this->patientObj->object->state,
-				'PostalCode' => $this->patientObj->object->zip_code,
-				'Birthday' => $this->patientObj->object->date_of_birth,
-				'MiddleName' => $this->patientObj->object->middle_name,
-				'Nickname' => $this->patientObj->object->nick_name
-			));
+			if (($this->patientObj->object->first_name!=='') &&
+				($this->patientObj->object->last_name!=='') &&
+				($this->patientObj->object->email!=='')) {
+				$cid = $this->keap->dsAdd(
+					'Contact', array(
+					'FirstName' => $this->patientObj->object->first_name,
+					'LastName' => $this->patientObj->object->last_name,
+					'Email' => $this->patientObj->object->email,
+					'Phone1Type' => 'Home',
+					'Phone2Type' => 'Mobile',
+					'Phone3Type' => 'Work',
+					'Phone1' => $this->patientObj->object->home_phone,
+					'Phone2' => $this->patientObj->object->cell_phone,
+					'Phone3' => $this->patientObj->object->office_phone,
+					'StreetAddress1' => $this->patientObj->object->address,
+					'City' => $this->patientObj->object->city,
+					'State' => $this->patientObj->object->state,
+					'PostalCode' => $this->patientObj->object->zip_code,
+					'Birthday' => $this->patientObj->object->date_of_birth,
+					'MiddleName' => $this->patientObj->object->middle_name,
+					'Nickname' => $this->patientObj->object->nick_name
+				) );
+			}
 		}
 		$this->keap->optIn($this->patientObj->object->email);
 		if ($this->logging) $this->log->lfWriteLn('Create/Update contact result = '.$cid);
@@ -330,7 +335,7 @@ class dc2keapObj {
 			if ($this->logging) $this->log->lfWriteLn('Error 447 creating/updating contact');
 			return false;
 		}
-		$cf=$this->keap->dsUpdate('Contact', $cid, array($DrChronoId=>$id));
+		$cf=$this->keap->dsUpdate('Contact', $cid, array('_DrChronoId1'=>$id));
 		if (!is_integer($cf)) {
 			$this->setError(448);
 			if ($this->logging) $this->log->lfWriteLn('Error 448 updating dr chrono id');
@@ -345,11 +350,19 @@ class dc2keapObj {
 	}
 	
 	function getContactByDCId($id) {
-		$result = $this->keap->dsQuery('Contact', 1, 0, array('_DrChronoId1'=>$id),
+		global $DrChronoId;
+		$result=$this->keap->dsFind('Contact', 1, 0, '_DrChronoId1', $id, array('Id',
+									'FirstName', 'MiddleName', 'LastName', 'Email',
+									'Nickname', 'Phone1Type', 'Phone1', 'Phone2Type', 'Phone2',
+									'Phone3Type', 'Phone3', 'StreetAddress1', 'City', 'State',
+									'PostalCode', 'Birthday', '_DrChronoId1'));
+		/**$result = $this->keap->dsQuery('Contact', 1, 0, array('_DrChrono1'=>$id),
 									array('Id', 'FirstName', 'MiddleName', 'LastName', 'Email',
-										'Nickname', 'Phone1Type', 'Phone1', 'Phone2Type', 'Phone2',
-										'Phone3Type', 'Phone3', 'StreetAddress1', 'City', 'State',
-										'PostalCode', 'Birthday', '_DrChronoId1'));
+									'Nickname', 'Phone1Type', 'Phone1', 'Phone2Type', 'Phone2',
+									'Phone3Type', 'Phone3', 'StreetAddress1', 'City', 'State',
+									'PostalCode', 'Birthday', '_DrChronoId1'));**/
+		//if (!is_integer($result)) $this->log->lfWriteLn('Error in getContactByDCId($id) = '.$result);
+		$this->log->lfWriteLn('$result = '.$result);
 		if ((is_array($result)) && (empty($result))) return false; else return $result;
 	}
 	

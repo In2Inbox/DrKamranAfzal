@@ -13,65 +13,62 @@ $json=json_encode($get);
 }
 /* end webhook verify code */
 
-// Instantiate objects from classes
-$json='';
-//require_once 'dctesting.inc'; // ONLY unremark when testing
+require_once 'dctesting.inc'; // ONLY unremark when testing
 require_once 'dc2keap.php';
 require_once 'src/isdk.php';
 require_once 'constants.inc';
 require_once 'LogFileClass.php';
 
+// Instantiate objects from classes
+$dcId=0;
+$dc=new dc2keapObj();
+$jsonLog=new LogFileClass('json.log');
+
 // retrieve inputs from drchrono webhook
 $event=$_SERVER['HTTP_X_DRCHRONO_EVENT'];
 $method=$_SERVER['REQUEST_METHOD'];
-if ($json==='') $json=file_get_contents('php://input');
+if ($json==='') $json=$dc->getJSON();
 
 /* active log of json inputs */
-$jsonLog=new LogFileClass('json.log');
 $jsonLog->lfWriteLn($json);
-//file_put_contents('json.json', $json);
-
-/* Initialize drchrono object */
-$dcId=0;
-$dc=new dc2keapObj($json);
-//if ($dc->logging) file_put_contents('phpinput.json', $json);
+if ($dc->logging) file_put_contents('json.json', $json);
 
 /* check that method is a post action otherwise halt */
 if ($method!=='POST') die();
 
 /* Check that no other excluding factors exist */
-$obj=$dc->getObj();
+// $obj=$dc->getObj();
 if (isset($obj->appt_is_break)) {
 	if ($obj->appt_is_break) {
-		$dc->log->lfWriteLn('Appointment object is a BREAK.  End processing.');
+		if ($dc->logging) $dc->log->lfWriteLn('Appointment object is a BREAK.  End processing.');
 		die();
 	}
 }
 
 if (isset($obj->patient)) {
 	if (is_nan($obj->patient)) {
-		$dc->log->lfWriteLn('Patient ID not present.  Cannot continue.');
+		if ($dc->logging) $dc->log->lfWriteLn('Patient ID not present.  Cannot continue.');
 		die();
 	}
 }
 
 if (isset($obj->office)) {
 	if (is_nan($obj->patient)) {
-		$dc->log->lfWriteLn('Office ID not present.  Cannot continue.');
+		if ($dc->logging) $dc->log->lfWriteLn('Office ID not present.  Cannot continue.');
 		die();
 	}
 }
 
 if (isset($obj->doctor)) {
 	if (is_nan($obj->doctor)) {
-		$dc->log->lfWriteLn('Doctor ID not present.  Cannot continue.');
+		if ($dc->logging) $dc->log->lfWriteLn('Doctor ID not present.  Cannot continue.');
 		die();
 	}
 }
 
 if (isset($obj->profile)) {
 	if (is_nan($obj->profile)) {
-		$dc->log->lfWriteLn('Profile ID not present.  Cannot continue.');
+		if ($dc->logging) $dc->log->lfWriteLn('Profile ID not present.  Cannot continue.');
 		die();
 	}
 }
@@ -90,39 +87,41 @@ function addCon($first, $middle, $last, $nickname, $email, $phone1type, $phone1,
                 $phone3type, $phone3, $streetaddress1, $city, $state, $postalcode, $dob,
 				$conObj) {
 	global $dc;
-	$check=$dc->getContactByDCId($conObj->id);
-	if (!$check) {
-		$cid=$dc->keap->dsAdd('Contact',
-			array(
-				'FirstName' => $first,
-				'MiddleName' => $middle,
-				'LastName' => $last,
-				'Nickname' => $nickname,
-				'Email' => $email,
-				'Phone1Type' => $phone1type,
-				'Phone2Type' => $phone2type,
-				'Phone3Type' => $phone3type,
-				'Phone1' => $phone1,
-				'Phone2' => $phone2,
-				'Phone3' => $phone3,
-				'StreetAddress1' => $streetaddress1,
-				'City' => $city,
-				'State' => $state,
-				'PostalCode' => $postalcode,
-				'Birthday' => $dob
-			));
-	} else $cid=$check[0]['Id'];
-	if ($dc->logging) $dc->log->lfWriteLn('addCon() (dsAdd) result = '.$cid);
-	$dc->keap->dsUpdate('Contact', $cid, array('_DrChronoId'=>$conObj->id));
-	$dc->keap->optIn($email);
-	return $cid;
+	if (($first!=='') && ($last!=='') && ($email!=='')) {
+		$check = $dc->getContactByDCId( $conObj->id );
+		if (!$check) {
+			$cid = $dc->keap->dsAdd(
+				'Contact',
+				array(
+					'FirstName' => $first,
+					'MiddleName' => $middle,
+					'LastName' => $last,
+					'Nickname' => $nickname,
+					'Email' => $email,
+					'Phone1Type' => $phone1type,
+					'Phone2Type' => $phone2type,
+					'Phone3Type' => $phone3type,
+					'Phone1' => $phone1,
+					'Phone2' => $phone2,
+					'Phone3' => $phone3,
+					'StreetAddress1' => $streetaddress1,
+					'City' => $city,
+					'State' => $state,
+					'PostalCode' => $postalcode,
+					'Birthday' => $dob
+				) );
+		} else $cid = $check[0]['Id'];
+		if ($dc->logging) $dc->log->lfWriteLn( 'addCon() (dsAdd) result = ' . $cid );
+		$dc->keap->dsUpdate( 'Contact', $cid, array('_DrChronoId' => $conObj->id) );
+		$dc->keap->optIn( $email );
+		return $cid;
+	}
 }
 
-function appointmentFields($dcid, $date, $time, $location) {
-	global $dc, $appointmentDateFieldName, $appointmentTimeFieldName, $appointmentLocationFieldName;
-	$cid=$dc->getContactByDCId($dcid)[0]['Id'];
-	return $dc->keap->dsUpdate('Contact', $cid, array($appointmentDateFieldName=>$date,
-		$appointmentTimeFieldName=>$time, $appointmentLocationFieldName=>$location));
+function appointmentFields($cid, $dcid, $date, $time, $location) {
+	global $dc, $appointmentDateFieldName, $appointmentTimeFieldName, $appointmentLocationFieldName, $DrChronoId, $appointmentIdFieldName;
+	return $dc->keap->dsUpdate('Contact', $cid, array($appointmentDateFieldName=>$date, $DrChronoId=>$dcid,
+		$appointmentTimeFieldName=>$time, $appointmentLocationFieldName=>$location, $appointmentIdFieldName=>$dc->obj->object->id));
 }
 
 function demographicFields($chartid) {
@@ -142,10 +141,14 @@ if ($event==='PATIENT_CREATE') {
 	$cid=$dc->keapContactAdd($obj->id);
 } elseif (!$obj->appt_is_break) {
 	$con=$dc->getDCPatientById($obj->patient);
+	$dccid=$dc->getContactByDCId($obj->patient);
 	$cid=addCon($con->first_name, $con->middle_name, $con->last_name, $con->nick_name,
 	$con->email, 'Home', $con->home_phone, 'Mobile', $con->cell_phone,
 	'Work', $con->office_phone, $con->address, $con->city, $con->state,
 		$con->zip_code, $con->date_of_birth, $con);
+} else {
+	$dc->log->lfWriteLn('NOT a qualifying appointment (break).  Ignoring.');
+	die();
 }
 
 // Apply event tag
@@ -159,30 +162,36 @@ if (($event==='APPOINTMENT_CREATE') ||
 	($event==='APPOINTMENT_MODIFY') ||
 	($event==='APPOINTMENT_DELETE')) {
 	if (($event!=='APPOINTMENT_DELETE') && (!$obj->appt_is_break)) {
-		$ofc = $dc->getOfficeById( $obj->office );
+		$ofc = $dc->getOfficeById( $obj->offices[0] );
 		$office = json_decode( $ofc );
 		// set appointment fields
 		$da = explode( 'T', $obj->scheduled_time );
 		$date = $da[0];
 		$time = $da[1];
-		appointmentFields( $obj->patient, $date, $time, $ofc->name );
+		appointmentFields( $cid, $obj->patient, $date, $time, $office->name );
 		if ($dc->logging) {
 			$dc->log->lfWriteLn( 'office json = ' . $ofc );
 			$dc->log->lfWriteLn( 'Appointment Fields :' );
 			$dc->log->lfWriteLn( '     Patient = ' . $obj->patient );
+			$dc->log->lfWriteLn( '     Reason = '. $obj->reason );
 			$dc->log->lfWriteLn( '     Date = ' . $date );
 			$dc->log->lfWriteLn( '     Time = ' . $time );
-			$dc->log->lfWriteLn( '     Office/Location = ' . $ofc->name );
+			$dc->log->lfWriteLn( '     Office/Location = ' . $office->name );
 		}
+	} else {
+		$dc->keap->dsUpdate('Contact', $cid, array($appointmentDateFieldName=>'',
+			$appointmentTimeFieldName=>'', $appointmentLocationFieldName=>'', $appointmentIdFieldName=>''));
 	}
-	$tid = $dc->tagByNameExists($obj->status);
-	if (!$tid) $tid=$dc->createTag($obj->status);
-	if ($tid) $dc->keap->grpAssign($cid, $tid);
-}
-
-// if appointment is a break (not an appointment) no need to go further
-if (isset($obj->appt_is_break)) {
-	if (!$obj->appt_is_break) die();
+	if ($obj->status!=='') {
+		$tid = $dc->tagByNameExists( $obj->status );
+		if (!$tid) $tid = $dc->createTag( $obj->status );
+		if ($tid) $dc->keap->grpAssign( $cid, $tid );
+	}
+	if ($obj->reason!=='') {
+		$tid = $dc->tagByNameExists( $obj->reason );
+		if (!$tid) $tid = $dc->createTag( $obj->reason );
+		if ($tid) $dc->keap->grpAssign( $cid, $tid );
+	}
 }
 
 // apply ancillary tags here
